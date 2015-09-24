@@ -92,3 +92,19 @@ describe 'UPCLookupPlugin', ->
            it 'should emit an error',(done) ->
              expect(@errorSpy).to.have.been.calledWith(new Error("105:Api Key is incorrect"))
              done()
+
+         describe 'when there are no more API requests remaining', ->
+           beforeEach (done) ->
+             request.get.yields(null, {statusCode : 200}, {valid : false, error: 199, reason: "No more API requests remaining"})
+             @messageSpy = sinon.spy()
+             @sut.on('message', @messageSpy)
+             @sut.onMessage(@message)
+             done()
+
+           it 'should emit an error',(done) ->
+             expect(@messageSpy).to.have.been.calledWith({
+               topic : "error"
+               errorCode: 199
+               reason : "No more API requests remaining"
+               })
+             done()

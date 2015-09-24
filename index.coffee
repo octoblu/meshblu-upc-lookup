@@ -32,7 +32,12 @@ class Plugin extends EventEmitter
     @request.get("http://api.upcdatabase.org/json/#{@options.apiKey}/#{message.upcCode}",
      null,
      (error, response, body) =>
-       @emit('error', new Error("#{body.error}:#{body.reason}")) unless body.valid
+       if(!body.valid)
+         return @emit('error', new Error("#{body.error}:#{body.reason}")) if (body.error < 199)
+         return @emit('message', {topic: 'error', errorCode: body.error, reason: body.reason}) if(body.error >= 199)
+       else
+         return @emit('message', @body)
+
     )
 
     # @emit 'message', response
