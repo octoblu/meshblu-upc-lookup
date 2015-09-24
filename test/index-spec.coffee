@@ -108,3 +108,35 @@ describe 'UPCLookupPlugin', ->
                reason : "No more API requests remaining"
                })
              done()
+
+         describe 'when there is a non-numeric UPC code', ->
+           beforeEach (done) ->
+             request.get.yields(null, {statusCode : 200}, {valid : false, error: 205, reason: "The code you entered was non-numeric"})
+             @messageSpy = sinon.spy()
+             @sut.on('message', @messageSpy)
+             @sut.onMessage(@message)
+             done()
+
+           it 'should emit an error',(done) ->
+             expect(@messageSpy).to.have.been.calledWith({
+               topic : "error"
+               errorCode: 205
+               reason : "The code you entered was non-numeric"
+               })
+             done()
+
+         describe 'when the code does not exist', ->
+           beforeEach (done) ->
+             request.get.yields(null, {statusCode : 200}, {valid : false, error: 301, reason: "Code does not exist"})
+             @messageSpy = sinon.spy()
+             @sut.on('message', @messageSpy)
+             @sut.onMessage(@message)
+             done()
+
+           it 'should emit an error',(done) ->
+             expect(@messageSpy).to.have.been.calledWith({
+               topic : "error"
+               errorCode: 301
+               reason : "Code does not exist"
+               })
+             done()
