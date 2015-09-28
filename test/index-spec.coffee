@@ -71,72 +71,12 @@ describe 'UPCLookupPlugin', ->
       describe 'When the upc database site returns errors', ->
         describe 'when the API key length is incorrect', ->
           beforeEach (done) ->
-            request.get.yields(null, {statusCode : 200}, {valid : false, error: 101, reason: "Api Key length is incorrect"})
-            @errorSpy = sinon.spy()
-            @sut.on('error', @errorSpy)
+            request.get.yields(null, { statusCode : 200 }, { valid : "false", reason: "Api Key length is incorrect" })
+            @messageSpy= sinon.spy()
+            @sut.on('message', @messageSpy)
             @sut.onMessage(@message)
             done()
 
-          it 'should emit an error',(done) ->
-            expect(@errorSpy).to.have.been.calledWith(new Error("101:Api Key length is incorrect"))
+          it 'should return valid:false and reason',(done) ->
+            expect(@messageSpy).to.have.been.calledWith({ valid : "false", reason: "Api Key length is incorrect" })
             done()
-
-         describe 'when the API key is incorrect', ->
-           beforeEach (done) ->
-             request.get.yields(null, {statusCode : 200}, {valid : false, error: 105, reason: "Api Key is incorrect"})
-             @errorSpy = sinon.spy()
-             @sut.on('error', @errorSpy)
-             @sut.onMessage(@message)
-             done()
-
-           it 'should emit an error',(done) ->
-             expect(@errorSpy).to.have.been.calledWith(new Error("105:Api Key is incorrect"))
-             done()
-
-         describe 'when there are no more API requests remaining', ->
-           beforeEach (done) ->
-             request.get.yields(null, {statusCode : 200}, {valid : false, error: 199, reason: "No more API requests remaining"})
-             @messageSpy = sinon.spy()
-             @sut.on('message', @messageSpy)
-             @sut.onMessage(@message)
-             done()
-
-           it 'should emit an error',(done) ->
-             expect(@messageSpy).to.have.been.calledWith({
-               topic : "error"
-               errorCode: 199
-               reason : "No more API requests remaining"
-               })
-             done()
-
-         describe 'when there is a non-numeric UPC code', ->
-           beforeEach (done) ->
-             request.get.yields(null, {statusCode : 200}, {valid : false, error: 205, reason: "The code you entered was non-numeric"})
-             @messageSpy = sinon.spy()
-             @sut.on('message', @messageSpy)
-             @sut.onMessage(@message)
-             done()
-
-           it 'should emit an error',(done) ->
-             expect(@messageSpy).to.have.been.calledWith({
-               topic : "error"
-               errorCode: 205
-               reason : "The code you entered was non-numeric"
-               })
-             done()
-
-         describe 'when the code does not exist', ->
-           beforeEach (done) ->
-             request.get.yields(null, {statusCode : 200}, {valid : false, error: 301, reason: "Code does not exist"})
-             @messageSpy = sinon.spy()
-             @sut.on('message', @messageSpy)
-             @sut.onMessage(@message)
-             done()
-
-           it 'should emit an error',(done) ->
-             expect(@messageSpy).to.have.been.calledWith({
-               topic : "error"
-               errorCode: 301
-               reason : "Code does not exist"
-               })
-             done()
