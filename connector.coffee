@@ -68,7 +68,7 @@ class Connector extends EventEmitter
 
     @plugin.on 'message', (message) =>
       @emit 'message.send', message
-      @conx.message ["*"], {}, message
+      @conx.message ["*"], message
 
   emitError: (error) =>
     @emit 'error', error
