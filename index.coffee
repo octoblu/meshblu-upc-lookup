@@ -19,34 +19,31 @@ OPTIONS_SCHEMA =
       required: true
 
 class Plugin extends EventEmitter
-  constructor:(@dependencies) ->
+  constructor: (@dependencies) ->
     @options = {}
     @messageSchema = MESSAGE_SCHEMA
     @optionsSchema = OPTIONS_SCHEMA
-
     @request = @dependencies?.request or request
 
+    @KEY_NOT_SET_ERROR = 'API KEY has not been set on options'
+    @UPC_MISSING_ERROR = 'UPC Code is missing'
+
   onMessage: (message) =>
-    debug('Message received', message)
-    @emit('error' , new Error("API KEY has not been set on options")) unless @options.apiKey
-    @emit('error' , new Error("UPC Code is missing")) unless message.upcCode or message.payload?.upcCode
+    debug 'Message received', message
+
     upcCode = message.upcCode || message.payload?.upcCode
-    @request.get("http://api.upcdatabase.org/json/#{@options.apiKey}/#{upcCode}",
-     {
-       json : true
-     },
-     (error, response, body) =>
-      debug("Response from UPC database", error, response, body)
-      if(error)
-        debug("Error #{error}")
-        return @emit('error', error) if(error)
+    @emit 'error', new Error(@KEY_NOT_SET_ERROR) unless @options.apiKey
+    @emit 'error', new Error(@UPC_MISSING_ERROR) unless upcCode
 
-      return @emit("message", body)
+    url = "http://api.upcdatabase.org/json/#{@options.apiKey}/#{upcCode}"
+    @request.get url, json: true, (error, response, body) =>
+      debug "Response from UPC database", error, body
 
+      if error
+        debug "Error #{error}"
+        return @emit 'error', error
 
-    )
-
-    # @emit 'message', response
+      @emit 'message', body
 
   onConfig: (device) =>
     @setOptions device.options
